@@ -132,12 +132,12 @@ def main():
     
     api_key = input("API Key: ").strip()
     if not api_key:
-        api_key = "BGtN6bmiB3NmBEo27nOPLzgIlbkkk53q"
+        api_key = "WpUO0r4Wpdb1HRvgLaFd7BVcuztJecol"
         print(f"  Using default: {api_key[:20]}...")
     
     api_secret = input("API Secret: ").strip()
     if not api_secret:
-        api_secret = "zzo1h0qn0i9qnXGUTV6m3Kyk"
+        api_secret = "l6GHq2ZvPvwnWpq66aFeqQcR"
         print(f"  Using default: {api_secret[:20]}...")
     
     print("\n🔍 Fetching devices from VSPhone API...")
