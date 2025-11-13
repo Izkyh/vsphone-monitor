@@ -7,7 +7,7 @@
       "devices": [
         {
           "device_id": "ACP250912ADLO4I6",
-          "device_ip": "192.168.1.102",
+          "device_ip": "162.128.158.208",
           "apps": [
             {
               "package": "com.mangcut.rulod",
@@ -63,7 +63,7 @@
         },
         {
           "device_id": "ATP251016DUC8PS3",
-          "device_ip": "192.168.1.102",
+          "device_ip": "162.128.224.135",
           "apps": [
             {
               "package": "com.mangcut.rulod",
