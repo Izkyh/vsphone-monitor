@@ -218,10 +218,37 @@ class VSPhoneMonitor:
             return False
 
 
+    def get_device_info(self, pad_code: str) -> Optional[Dict]:
+        """Get specific device information"""
+        url = f"{self.base_url}/vsphone/api/padApi/padInfo"
+        
+        body = {
+            "padCode": pad_code
+        }
+        
+        try:
+            headers = self._get_headers(body)
+            response = requests.post(
+                url,
+                headers=headers,
+                json=body,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('code') == 200:
+                    return result.get('data')
+            return None
+        except Exception as e:
+            print(f"[ERROR] Failed to get device info: {e}")
+            return None
+
+
 def main():
-    """Main monitoring loop"""
+    """Main monitoring loop - Simplified Version"""
     
-    # Configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
+    # Your credentials
     ACCESS_KEY = "WpUO0r4Wpdb1HRvgLaFd7BVcuztJecol"
     SECRET_KEY = "l6GHq2ZvPvwnWpq66aFeqQcR"
     
@@ -249,42 +276,50 @@ def main():
             # Get device list
             devices = monitor.get_device_list()
             
-            if devices:
+            if devices and isinstance(devices, list):
+                print(f"[INFO] Found {len(devices)} devices")
+                
                 for device in devices:
-                    pad_code = device.get('padCode')
-                    vm_status = device.get('vmStatus')  # 0: offline, 1: online
+                    # Handle both dict and list structures
+                    if isinstance(device, dict):
+                        pad_code = device.get('padCode') or device.get('pad_code')
+                        vm_status = device.get('vmStatus', 0)
+                    else:
+                        print(f"[WARNING] Unexpected device format: {type(device)}")
+                        continue
+                    
+                    if not pad_code:
+                        print("[WARNING] Device without padCode, skipping...")
+                        continue
                     
                     print(f"[INFO] Checking device: {pad_code}")
                     
+                    # Check if device is online
                     if vm_status == 0:
-                        print(f"[WARNING] {pad_code}: Device is offline")
+                        print(f"[WARNING] {pad_code}: Device is OFFLINE")
+                        # Optional: Try to restart offline devices
+                        # monitor.restart_device(pad_code)
                         continue
-                    
-                    # Get ADB info
-                    adb_info = monitor.get_adb_info(pad_code)
-                    
-                    if adb_info and adb_info.get('enable'):
-                        command = adb_info.get('command', '')
-                        # Parse IP and port from command: "adb connect ip:port"
-                        if 'adb connect' in command:
-                            connection = command.replace('adb connect ', '').strip()
-                            if ':' in connection:
-                                ip, port = connection.split(':')
-                                
-                                # Check ADB connection
-                                if not monitor.check_adb_connection(ip, int(port)):
-                                    print(f"[ERROR] {pad_code}: ADB connection failed, restarting...")
-                                    if monitor.restart_device(pad_code):
-                                        total_restarts += 1
+                    elif vm_status == 1:
+                        print(f"[INFO] {pad_code}: Device is ONLINE ✓")
                     else:
-                        print(f"[INFO] {pad_code}: ADB not enabled or not available")
+                        print(f"[INFO] {pad_code}: Status = {vm_status}")
+                
+                print(f"\n✅ All devices checked successfully!")
+                
+            elif devices and isinstance(devices, dict):
+                # Handle single device response
+                print("[INFO] Single device response received")
+                pad_code = devices.get('padCode')
+                if pad_code:
+                    print(f"[INFO] Device: {pad_code}")
+                    
             else:
-                print("[ERROR] Failed to retrieve device list")
+                print("[ERROR] Failed to retrieve device list or empty response")
                 print("[ERROR] Please check:")
                 print("[ERROR] 1. Access Key and Secret Key are correct")
-                print("[ERROR] 2. Account has active subscription")
+                print("[ERROR] 2. Account has active devices")
                 print("[ERROR] 3. Network connection is working")
-                print("[ERROR] 4. API endpoint is accessible")
             
             # Print summary
             print("=" * 57)
@@ -299,7 +334,9 @@ def main():
             print("\n\n[INFO] Monitor stopped by user")
             break
         except Exception as e:
+            import traceback
             print(f"\n[ERROR] Unexpected error: {e}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             time.sleep(CHECK_INTERVAL)
 
 
