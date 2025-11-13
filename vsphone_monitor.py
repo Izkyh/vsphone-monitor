@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-VSPhone Multi-Account Monitor v1.0
+VSPhone Multi-Account Monitor v1.1 - FIXED VERSION
 24/7 Automatic Device & App Management
+Fixed: API 405 Error with GET/POST fallback
 """
 
 # ========== IMPORTS ==========
@@ -33,8 +34,8 @@ except ImportError:
     HAS_COLOR = False
 
 # ========== CONFIGURATION ==========
-VERSION = "1.0.0"
-CONFIG_FILE = "accounts.json"
+VERSION = "1.1.0"
+CONFIG_FILE = "account.json"  # Changed to match your repo
 LOG_DIR = "logs"
 LOG_FILE = os.path.join(LOG_DIR, "vsphone_monitor.log")
 STATS_FILE = os.path.join(LOG_DIR, "monitor_stats.json")
@@ -64,9 +65,9 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-# ========== VSPHONE API CLIENT ==========
+# ========== VSPHONE API CLIENT (FIXED) ==========
 class VSPhoneAPI:
-    """VSPhone API Client with HMAC-SHA256 signature authentication"""
+    """VSPhone API Client with HMAC-SHA256 signature authentication - FIXED VERSION"""
     
     def __init__(self, api_key, api_secret):
         self.api_key = api_key
@@ -78,7 +79,7 @@ class VSPhoneAPI:
     def _sign_request(self, method, uri, query_params="", body=""):
         """
         Generate HMAC-SHA256 signature for VSPhone API request
-        Following VSPhone's signature specification
+        FIXED: Support both GET and POST methods
         """
         # Generate timestamp
         now = datetime.now(timezone.utc)
@@ -86,7 +87,11 @@ class VSPhoneAPI:
         date_stamp = now.strftime('%Y%m%d')
         
         # Calculate body hash
-        body_str = json.dumps(body) if isinstance(body, dict) else str(body)
+        if method == "GET" or body == "":
+            body_str = ""
+        else:
+            body_str = json.dumps(body) if isinstance(body, dict) else str(body)
+        
         content_sha256 = hashlib.sha256(body_str.encode('utf-8')).hexdigest()
         
         # Build canonical headers (sorted)
@@ -147,30 +152,92 @@ class VSPhoneAPI:
         }
     
     def get_devices(self):
-        """Get all devices for this account"""
+        """
+        Get all devices for this account
+        FIXED: Try multiple methods to avoid 405 error
+        """
         uri = "/api/v1/phone/list"
-        headers = self._sign_request("POST", uri, body={})
         
+        # Method 1: Try POST with empty body (original method)
         try:
+            logger.debug("Trying POST request to get devices...")
+            body = {}
+            headers = self._sign_request("POST", uri, body=body)
+            
             response = requests.post(
                 f"{self.base_url}{uri}",
                 headers=headers,
-                json={},
+                json=body,
                 timeout=15
             )
-            response.raise_for_status()
-            data = response.json()
-            logger.debug(f"Got {len(data.get('data', {}).get('list', []))} devices from API")
-            return data
-        except requests.exceptions.Timeout:
-            logger.error("API request timeout")
-            return None
-        except requests.exceptions.RequestException as e:
-            logger.error(f"API request failed: {e}")
-            return None
+            
+            # If success, return data
+            if response.status_code == 200:
+                data = response.json()
+                logger.debug(f"POST success: Got {len(data.get('data', {}).get('list', []))} devices")
+                return data
+            
+            # If 405, try other methods
+            if response.status_code == 405:
+                logger.warning(f"POST returned 405, trying alternative methods...")
+            else:
+                logger.error(f"POST failed with status {response.status_code}: {response.text}")
+        
         except Exception as e:
-            logger.error(f"Unexpected error getting devices: {e}")
-            return None
+            logger.error(f"POST request error: {e}")
+        
+        # Method 2: Try GET request
+        try:
+            logger.debug("Trying GET request to get devices...")
+            headers = self._sign_request("GET", uri, body="")
+            
+            response = requests.get(
+                f"{self.base_url}{uri}",
+                headers=headers,
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.debug(f"GET success: Got {len(data.get('data', {}).get('list', []))} devices")
+                return data
+            else:
+                logger.error(f"GET failed with status {response.status_code}: {response.text}")
+        
+        except Exception as e:
+            logger.error(f"GET request error: {e}")
+        
+        # Method 3: Try POST with explicit empty string body
+        try:
+            logger.debug("Trying POST with empty string body...")
+            headers = self._sign_request("POST", uri, body="")
+            
+            response = requests.post(
+                f"{self.base_url}{uri}",
+                headers=headers,
+                data="",
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.debug(f"POST (empty string) success: Got {len(data.get('data', {}).get('list', []))} devices")
+                return data
+            else:
+                logger.error(f"POST (empty string) failed with status {response.status_code}: {response.text}")
+        
+        except Exception as e:
+            logger.error(f"POST (empty string) error: {e}")
+        
+        # All methods failed
+        logger.error("❌ All API request methods failed!")
+        logger.error("Please check:")
+        logger.error("1. API Key and Secret are correct")
+        logger.error("2. Account has active subscription")
+        logger.error("3. Network connection is working")
+        logger.error("4. VSPhone API is not down")
+        
+        return None
     
     def get_device_detail(self, device_id):
         """Get specific device details"""
@@ -197,19 +264,12 @@ class DeviceController:
     
     @staticmethod
     def extract_roblox_code(url_or_code):
-        """
-        Extract Roblox share code from URL or return code directly
-        
-        Supports:
-        - Full URL: https://www.roblox.com/share?code=ABC123&type=Server
-        - Code only: ABC123
-        """
+        """Extract Roblox share code from URL or return code directly"""
         if not url_or_code:
             return None
         
         url_or_code = str(url_or_code).strip()
         
-        # If it's a full URL
         if url_or_code.startswith('http'):
             try:
                 parsed = urlparse(url_or_code)
@@ -220,26 +280,19 @@ class DeviceController:
                 logger.error(f"Failed to parse URL: {e}")
                 return None
         
-        # If it's just the code
         return url_or_code
     
     @staticmethod
     def build_roblox_url(url_or_code):
-        """
-        Build full Roblox URL
-        If already full URL, return as-is
-        If just code, build URL
-        """
+        """Build full Roblox URL"""
         if not url_or_code:
             return None
         
         url_or_code = str(url_or_code).strip()
         
-        # If already full URL, return it
         if url_or_code.startswith('http'):
             return url_or_code
         
-        # If just code, build URL
         return f"https://www.roblox.com/share?code={url_or_code}&type=Server"
     
     @staticmethod
@@ -317,19 +370,14 @@ class DeviceController:
     
     @staticmethod
     def start_app(ip, package, url_or_code):
-        """
-        Start Roblox app with URL or code
-        Automatically handles both formats
-        """
+        """Start Roblox app with URL or code"""
         try:
-            # Build full URL
             roblox_url = DeviceController.build_roblox_url(url_or_code)
             
             if not roblox_url:
                 logger.error(f"Invalid Roblox URL/code: {url_or_code}")
                 return False
             
-            # Start app with intent
             cmd = f"adb -s {ip}:5555 shell \"am start -a android.intent.action.VIEW -d '{roblox_url}' {package}\""
             result = subprocess.run(
                 cmd, 
@@ -341,7 +389,7 @@ class DeviceController:
             
             if result.returncode == 0:
                 code = DeviceController.extract_roblox_code(url_or_code)
-                logger.info(f"✓ Started {package} on {ip} (code: {code[:8]}...)")
+                logger.info(f"✓ Started {package} on {ip} (code: {code[:8] if code else 'N/A'}...)")
                 return True
             else:
                 logger.error(f"Failed to start {package}: {result.stderr}")
@@ -356,13 +404,8 @@ class DeviceController:
         """Restart app: kill → wait → start"""
         logger.info(f"🔄 Restarting {package} on {ip}")
         
-        # Kill app
         DeviceController.kill_app(ip, package)
-        
-        # Wait for app to fully stop
         time.sleep(delay)
-        
-        # Start app
         success = DeviceController.start_app(ip, package, url_or_code)
         
         return success
@@ -436,6 +479,7 @@ class VSPhoneMonitor:
 ╔══════════════════════════════════════════════════════════════╗
 ║          VSPhone Multi-Account Monitor v{VERSION}                ║
 ║          24/7 Automatic Device & App Management              ║
+║                    FIXED: API 405 Error                      ║
 ╚══════════════════════════════════════════════════════════════╝
 
 📊 Accounts: {len(self.accounts)}
@@ -462,6 +506,12 @@ class VSPhoneMonitor:
         
         if not api_response or 'data' not in api_response:
             logger.error(f"{account_name}: Failed to get device list from API")
+            logger.warning(f"{account_name}: Will still try to check devices via ADB...")
+            # Continue to check devices via ADB even if API fails
+            for device_config in account['devices']:
+                device_ip = device_config.get('device_ip')
+                if device_ip:
+                    self.check_device_apps(account_name, device_ip, device_config.get('apps', []))
             return
         
         api_devices = api_response.get('data', {}).get('list', [])
@@ -482,14 +532,12 @@ class VSPhoneMonitor:
                 d_id = d.get('phoneId') or d.get('id')
                 d_name = d.get('phoneName') or d.get('name')
                 
-                # Match by ID (priority) or Name
                 if (device_id and d_id == device_id) or (device_name and d_name == device_name):
                     api_device = d
                     break
             
             if not api_device:
                 logger.warning(f"{account_name} - {device_name or device_id}: Device not found in API")
-                # Still try to check apps via ADB even if not in API
                 self.check_device_apps(account_name, device_ip, device_config.get('apps', []))
                 continue
             
@@ -542,7 +590,6 @@ class VSPhoneMonitor:
             is_running = DeviceController.check_app_running(device_ip, package)
             
             if not is_running:
-                # App not running - restart it
                 if HAS_COLOR:
                     print(f"  {Fore.YELLOW}⚠️  {game_name} ({package}): NOT RUNNING{Style.RESET_ALL}")
                 else:
@@ -550,7 +597,6 @@ class VSPhoneMonitor:
                 
                 logger.warning(f"{account_name} - {device_ip} - {game_name}: App stopped, restarting...")
                 
-                # Restart app
                 success = DeviceController.restart_app(
                     device_ip, 
                     package, 
@@ -570,14 +616,13 @@ class VSPhoneMonitor:
                     else:
                         print(f"  ❌ {game_name}: RESTART FAILED")
             else:
-                # App running fine
                 if HAS_COLOR:
                     print(f"  {Fore.GREEN}✅ {game_name} ({package}): RUNNING{Style.RESET_ALL}")
                 else:
                     print(f"  ✅ {game_name} ({package}): RUNNING")
     
     def monitor_loop(self):
-        """Main monitoring loop - runs forever"""
+        """Main monitoring loop"""
         self.print_banner()
         
         logger.info("Starting monitoring loop...")
@@ -596,7 +641,6 @@ class VSPhoneMonitor:
                         for account in self.accounts
                     ]
                     
-                    # Wait for all checks to complete
                     for future in as_completed(futures):
                         try:
                             future.result()
@@ -639,12 +683,11 @@ def main():
         logger.warning(f"Failed to write PID file: {e}")
     
     try:
-        # Initialize and start monitor
         monitor = VSPhoneMonitor(CONFIG_FILE)
         monitor.monitor_loop()
     except FileNotFoundError:
         logger.error(f"❌ Config file not found: {CONFIG_FILE}")
-        logger.error(f"Please create {CONFIG_FILE} based on accounts.example.json")
+        logger.error(f"Please create {CONFIG_FILE} with your VSPhone account details")
         return 1
     except KeyboardInterrupt:
         logger.info("\n👋 Goodbye!")
@@ -653,7 +696,6 @@ def main():
         logger.error(f"❌ Fatal error: {e}", exc_info=True)
         return 1
     finally:
-        # Clean up PID file
         try:
             if os.path.exists(PID_FILE):
                 os.remove(PID_FILE)
