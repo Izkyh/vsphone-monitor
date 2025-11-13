@@ -222,8 +222,8 @@ def main():
     """Main monitoring loop"""
     
     # Configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
-    ACCESS_KEY = "YOUR_ACCESS_KEY_HERE"
-    SECRET_KEY = "YOUR_SECRET_KEY_HERE"
+    ACCESS_KEY = "WpUO0r4Wpdb1HRvgLaFd7BVcuztJecol"
+    SECRET_KEY = "l6GHq2ZvPvwnWpq66aFeqQcR"
     
     # Check interval (seconds)
     CHECK_INTERVAL = 30
