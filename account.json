@@ -2,30 +2,124 @@
   "accounts": [
     {
       "name": "Account_1",
-      "api_key": "BGtN6bmiB3NmBEo27nOPLzgIlbkkk53q",
-      "api_secret": "zzo1h0qn0i9qnXGUTV6m3Kyk",
+      "api_key": "WpUO0r4Wpdb1HRvgLaFd7BVcuztJecol",
+      "api_secret": "l6GHq2ZvPvwnWpq66aFeqQcR",
       "devices": [
         {
-          "device_id": "APP2509077SNIUGS",
-          "device_name": "Pixel_4a",
+          "device_id": "ACP250912ADLO4I6",
           "device_ip": "192.168.1.102",
           "apps": [
             {
               "package": "com.mangcut.rulod",
-              "roblox_url": "https://www.roblox.com/share?code=2878c9a38a551c4099d4ce70920f9ceb&type=Server",
-              "game_name": "Fishit Server 1"
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
             },
             {
               "package": "com.mangcut.ruloe",
-              "roblox_url": "https://www.roblox.com/share?code=abc123xyz789&type=Server",
-              "game_name": "Fishit Server 2"
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.rulof",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.rulog",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloh",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloi",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloj",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+                "package": "com.mangcut.rulok",
+                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+                "game_name": "Fish it Server 1"
+            },
+            {
+                "package": "com.mangcut.rulol",
+                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+                "game_name": "Fish it Server 1"
+            },
+            {
+                "package": "com.mangcut.rulom",
+                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+                "game_name": "Fish it Server 1"
+            }
+          ]
+        },
+        {
+          "device_id": "ATP251016DUC8PS3",
+          "device_ip": "192.168.1.102",
+          "apps": [
+            {
+              "package": "com.mangcut.rulod",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloe",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.rulof",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.rulog",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloh",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloi",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+              "package": "com.mangcut.ruloj",
+              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+              "game_name": "Fish it Server 1"
+            },
+            {
+                "package": "com.mangcut.rulok",
+                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+                "game_name": "Fish it Server 1"
+            },
+            {
+                "package": "com.mangcut.rulol",
+                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+                "game_name": "Fish it Server 1"
+            },
+            {
+                "package": "com.mangcut.rulom",
+                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
+                "game_name": "Fish it Server 1"
             }
           ]
         }
       ]
-      
-    }
-    
+
+    }   
   ],
   
   "monitoring": {
