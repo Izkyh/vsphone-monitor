@@ -2,124 +2,67 @@
   "accounts": [
     {
       "name": "Account_1",
-      "api_key": "WpUO0r4Wpdb1HRvgLaFd7BVcuztJecol",
-      "api_secret": "l6GHq2ZvPvwnWpq66aFeqQcR",
+      "api_key": "BGtN6bmiB3NmBEo27nOPLzgIlbkkk53q",
+      "api_secret": "zzo1h0qn0i9qnXGUTV6m3Kyk",
       "devices": [
         {
-          "device_id": "ACP250912ADLO4I6",
-          "device_ip": "162.128.158.208",
+          "device_id": "APP2509077SNIUGS",
+          "device_ip": "103.237.100.169",
           "apps": [
             {
               "package": "com.mangcut.rulod",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone D"
             },
             {
               "package": "com.mangcut.ruloe",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone E"
             },
             {
               "package": "com.mangcut.rulof",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone F"
             },
             {
               "package": "com.mangcut.rulog",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone G"
             },
             {
               "package": "com.mangcut.ruloh",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone H"
             },
             {
               "package": "com.mangcut.ruloi",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone I"
             },
             {
               "package": "com.mangcut.ruloj",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone J"
             },
             {
-                "package": "com.mangcut.rulok",
-                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-                "game_name": "Fish it Server 1"
-            },
-            {
-                "package": "com.mangcut.rulol",
-                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-                "game_name": "Fish it Server 1"
-            },
-            {
-                "package": "com.mangcut.rulom",
-                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-                "game_name": "Fish it Server 1"
-            }
-          ]
-        },
-        {
-          "device_id": "ATP251016DUC8PS3",
-          "device_ip": "162.128.224.135",
-          "apps": [
-            {
-              "package": "com.mangcut.rulod",
+              "package": "com.mangcut.rulok",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone K"
             },
             {
-              "package": "com.mangcut.ruloe",
+              "package": "com.mangcut.rulol",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone L"
             },
             {
-              "package": "com.mangcut.rulof",
+              "package": "com.mangcut.rulom",
               "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
-            },
-            {
-              "package": "com.mangcut.rulog",
-              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
-            },
-            {
-              "package": "com.mangcut.ruloh",
-              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
-            },
-            {
-              "package": "com.mangcut.ruloi",
-              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
-            },
-            {
-              "package": "com.mangcut.ruloj",
-              "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-              "game_name": "Fish it Server 1"
-            },
-            {
-                "package": "com.mangcut.rulok",
-                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-                "game_name": "Fish it Server 1"
-            },
-            {
-                "package": "com.mangcut.rulol",
-                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-                "game_name": "Fish it Server 1"
-            },
-            {
-                "package": "com.mangcut.rulom",
-                "roblox_url": "https://www.roblox.com/share?code=0c42d67d460dba40bbfb2d15811b4054&type=Server",
-                "game_name": "Fish it Server 1"
+              "game_name": "Fish it Server 1 - Clone M"
             }
           ]
         }
       ]
-
-    }   
+    }
   ],
   
   "monitoring": {

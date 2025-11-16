@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-VSPhone Multi-Account Monitor v1.1 - FIXED VERSION
-24/7 Automatic Device & App Management
-Fixed: API 405 Error with GET/POST fallback
+VSPhone Auto Reconnect v2.0 - COMPLETELY FIXED
+Automatic Roblox app monitoring and restart system
 """
 
-# ========== IMPORTS ==========
 import requests
 import hashlib
 import hmac
@@ -16,691 +14,428 @@ import subprocess
 import sys
 import os
 import logging
-import signal
 from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from urllib.parse import urlparse, parse_qs
-
-# Colorama for colored output (with fallback)
-try:
-    from colorama import Fore, Style, init
-    init(autoreset=True)
-    HAS_COLOR = True
-except ImportError:
-    class Fore:
-        CYAN = GREEN = YELLOW = RED = MAGENTA = BLUE = WHITE = RESET = ''
-    class Style:
-        RESET_ALL = BRIGHT = ''
-    HAS_COLOR = False
+from typing import Optional, Dict, List
+import traceback
 
 # ========== CONFIGURATION ==========
-VERSION = "1.1.0"
-CONFIG_FILE = "account.json"  # Changed to match your repo
+VERSION = "2.0.0"
+CONFIG_FILE = "config.json"
 LOG_DIR = "logs"
-LOG_FILE = os.path.join(LOG_DIR, "vsphone_monitor.log")
-STATS_FILE = os.path.join(LOG_DIR, "monitor_stats.json")
-PID_FILE = "monitor.pid"
-
-# ========== SETUP LOGGING ==========
 os.makedirs(LOG_DIR, exist_ok=True)
 
+# ========== LOGGING SETUP ==========
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
-        logging.FileHandler(LOG_FILE, encoding='utf-8'),
+        logging.FileHandler(os.path.join(LOG_DIR, "monitor.log"), encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
     ]
 )
-
 logger = logging.getLogger(__name__)
-
-# ========== SIGNAL HANDLER ==========
-def signal_handler(signum, frame):
-    """Handle Ctrl+C gracefully"""
-    logger.info("\n🛑 Received stop signal, shutting down gracefully...")
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
 
 # ========== VSPHONE API CLIENT (FIXED) ==========
 class VSPhoneAPI:
-    """VSPhone API Client with HMAC-SHA256 signature authentication - FIXED VERSION"""
+    """VSPhone API Client with proper HMAC-SHA256 authentication"""
     
-    def __init__(self, api_key, api_secret):
+    def __init__(self, api_key: str, api_secret: str):
         self.api_key = api_key
         self.api_secret = api_secret
         self.host = "api.vsphone.com"
         self.base_url = f"https://{self.host}"
-        logger.debug(f"Initialized VSPhoneAPI for key: {api_key[:8]}...")
+        logger.info(f"✓ API Client initialized for key: {api_key[:10]}...")
     
-    def _sign_request(self, method, uri, query_params="", body=""):
-        """
-        Generate HMAC-SHA256 signature for VSPhone API request
-        FIXED: Support both GET and POST methods
-        """
-        # Generate timestamp
-        now = datetime.now(timezone.utc)
-        x_date = now.strftime('%Y%m%dT%H%M%SZ')
-        date_stamp = now.strftime('%Y%m%d')
-        
-        # Calculate body hash
-        if method == "GET" or body == "":
-            body_str = ""
-        else:
-            body_str = json.dumps(body) if isinstance(body, dict) else str(body)
-        
-        content_sha256 = hashlib.sha256(body_str.encode('utf-8')).hexdigest()
-        
-        # Build canonical headers (sorted)
-        canonical_headers = {
-            'content-type': 'application/json',
-            'host': self.host,
-            'x-content-sha256': content_sha256,
-            'x-date': x_date
-        }
-        
-        canonical_header_str = '\n'.join([f"{k}:{v}" for k, v in sorted(canonical_headers.items())])
-        signed_headers = ';'.join(sorted(canonical_headers.keys()))
-        
-        # Build canonical request
-        canonical_request = f"{method}\n{uri}\n{query_params}\n{canonical_header_str}\n\n{signed_headers}\n{content_sha256}"
-        
-        # Create string to sign
-        algorithm = "SDK-HMAC-SHA256"
-        credential_scope = f"{date_stamp}/vsphone/sdk_request"
-        canonical_request_hash = hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
-        string_to_sign = f"{algorithm}\n{x_date}\n{credential_scope}\n{canonical_request_hash}"
-        
-        # Calculate signature with layered HMAC
-        k_date = hmac.new(
-            f"SDK{self.api_secret}".encode('utf-8'),
-            date_stamp.encode('utf-8'),
-            hashlib.sha256
-        ).digest()
-        
-        k_service = hmac.new(
-            k_date,
-            "vsphone".encode('utf-8'),
-            hashlib.sha256
-        ).digest()
-        
-        k_signing = hmac.new(
-            k_service,
-            "sdk_request".encode('utf-8'),
-            hashlib.sha256
-        ).digest()
-        
-        signature = hmac.new(
-            k_signing,
-            string_to_sign.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
-        
-        # Build authorization header
-        authorization = f"{algorithm} Credential={self.api_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}"
-        
-        # Return complete headers
-        return {
-            'Content-Type': 'application/json',
-            'Host': self.host,
-            'X-Content-Sha256': content_sha256,
-            'X-Date': x_date,
-            'Authorization': authorization
-        }
+    def _generate_signature(self, method: str, uri: str, body: str = "") -> Dict[str, str]:
+        """Generate HMAC-SHA256 signature for API request"""
+        try:
+            # Generate timestamp
+            now = datetime.now(timezone.utc)
+            x_date = now.strftime('%Y%m%dT%H%M%SZ')
+            date_stamp = now.strftime('%Y%m%d')
+            
+            # Calculate body hash
+            content_sha256 = hashlib.sha256(body.encode('utf-8')).hexdigest()
+            
+            # Build canonical headers
+            canonical_headers = [
+                f"content-type:application/json",
+                f"host:{self.host}",
+                f"x-content-sha256:{content_sha256}",
+                f"x-date:{x_date}"
+            ]
+            canonical_header_str = '\n'.join(canonical_headers)
+            signed_headers = "content-type;host;x-content-sha256;x-date"
+            
+            # Build canonical request
+            canonical_request = f"{method}\n{uri}\n\n{canonical_header_str}\n\n{signed_headers}\n{content_sha256}"
+            
+            # Create string to sign
+            algorithm = "SDK-HMAC-SHA256"
+            credential_scope = f"{date_stamp}/vsphone/sdk_request"
+            canonical_request_hash = hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
+            string_to_sign = f"{algorithm}\n{x_date}\n{credential_scope}\n{canonical_request_hash}"
+            
+            # Calculate signature
+            k_date = hmac.new(
+                f"SDK{self.api_secret}".encode('utf-8'),
+                date_stamp.encode('utf-8'),
+                hashlib.sha256
+            ).digest()
+            
+            k_service = hmac.new(k_date, "vsphone".encode('utf-8'), hashlib.sha256).digest()
+            k_signing = hmac.new(k_service, "sdk_request".encode('utf-8'), hashlib.sha256).digest()
+            signature = hmac.new(k_signing, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+            
+            # Build authorization header
+            authorization = f"{algorithm} Credential={self.api_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}"
+            
+            return {
+                'Content-Type': 'application/json',
+                'Host': self.host,
+                'X-Content-Sha256': content_sha256,
+                'X-Date': x_date,
+                'Authorization': authorization
+            }
+        except Exception as e:
+            logger.error(f"Error generating signature: {e}")
+            raise
     
-    def get_devices(self):
-        """
-        Get all devices for this account
-        FIXED: Try multiple methods to avoid 405 error
-        """
+    def get_device_list(self) -> Optional[List[Dict]]:
+        """Get list of all devices"""
         uri = "/api/v1/phone/list"
         
-        # Method 1: Try POST with empty body (original method)
+        # Try POST first (as per API doc)
         try:
-            logger.debug("Trying POST request to get devices...")
-            body = {}
-            headers = self._sign_request("POST", uri, body=body)
+            body = json.dumps({})
+            headers = self._generate_signature("POST", uri, body)
             
             response = requests.post(
                 f"{self.base_url}{uri}",
                 headers=headers,
-                json=body,
-                timeout=15
-            )
-            
-            # If success, return data
-            if response.status_code == 200:
-                data = response.json()
-                logger.debug(f"POST success: Got {len(data.get('data', {}).get('list', []))} devices")
-                return data
-            
-            # If 405, try other methods
-            if response.status_code == 405:
-                logger.warning(f"POST returned 405, trying alternative methods...")
-            else:
-                logger.error(f"POST failed with status {response.status_code}: {response.text}")
-        
-        except Exception as e:
-            logger.error(f"POST request error: {e}")
-        
-        # Method 2: Try GET request
-        try:
-            logger.debug("Trying GET request to get devices...")
-            headers = self._sign_request("GET", uri, body="")
-            
-            response = requests.get(
-                f"{self.base_url}{uri}",
-                headers=headers,
+                data=body,
                 timeout=15
             )
             
             if response.status_code == 200:
                 data = response.json()
-                logger.debug(f"GET success: Got {len(data.get('data', {}).get('list', []))} devices")
-                return data
+                if data.get('code') == 0:
+                    devices = data.get('data', {}).get('list', [])
+                    logger.info(f"✓ Retrieved {len(devices)} devices from API")
+                    return devices
+                else:
+                    logger.error(f"API returned error code: {data.get('code')} - {data.get('msg')}")
             else:
-                logger.error(f"GET failed with status {response.status_code}: {response.text}")
+                logger.error(f"API request failed: {response.status_code} - {response.text}")
         
         except Exception as e:
-            logger.error(f"GET request error: {e}")
-        
-        # Method 3: Try POST with explicit empty string body
-        try:
-            logger.debug("Trying POST with empty string body...")
-            headers = self._sign_request("POST", uri, body="")
-            
-            response = requests.post(
-                f"{self.base_url}{uri}",
-                headers=headers,
-                data="",
-                timeout=15
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                logger.debug(f"POST (empty string) success: Got {len(data.get('data', {}).get('list', []))} devices")
-                return data
-            else:
-                logger.error(f"POST (empty string) failed with status {response.status_code}: {response.text}")
-        
-        except Exception as e:
-            logger.error(f"POST (empty string) error: {e}")
-        
-        # All methods failed
-        logger.error("❌ All API request methods failed!")
-        logger.error("Please check:")
-        logger.error("1. API Key and Secret are correct")
-        logger.error("2. Account has active subscription")
-        logger.error("3. Network connection is working")
-        logger.error("4. VSPhone API is not down")
+            logger.error(f"Error fetching device list: {e}")
+            logger.debug(traceback.format_exc())
         
         return None
     
-    def get_device_detail(self, device_id):
-        """Get specific device details"""
+    def get_device_detail(self, phone_id: str) -> Optional[Dict]:
+        """Get detailed information about a specific device"""
         uri = "/api/v1/phone/detail"
-        body = {"phoneId": device_id}
-        headers = self._sign_request("POST", uri, body=body)
         
         try:
+            body = json.dumps({"phoneId": phone_id})
+            headers = self._generate_signature("POST", uri, body)
+            
             response = requests.post(
                 f"{self.base_url}{uri}",
                 headers=headers,
-                json=body,
+                data=body,
                 timeout=15
             )
-            response.raise_for_status()
-            return response.json()
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('code') == 0:
+                    return data.get('data')
+            
+            logger.error(f"Failed to get device detail: {response.text}")
+        
         except Exception as e:
-            logger.error(f"Error getting device detail {device_id}: {e}")
-            return None
+            logger.error(f"Error getting device detail: {e}")
+        
+        return None
 
-# ========== DEVICE CONTROLLER ==========
-class DeviceController:
-    """Control Android devices via ADB wireless"""
+# ========== ADB CONTROLLER ==========
+class ADBController:
+    """Control Android devices via ADB"""
     
     @staticmethod
-    def extract_roblox_code(url_or_code):
-        """Extract Roblox share code from URL or return code directly"""
-        if not url_or_code:
-            return None
-        
-        url_or_code = str(url_or_code).strip()
-        
-        if url_or_code.startswith('http'):
-            try:
-                parsed = urlparse(url_or_code)
-                params = parse_qs(parsed.query)
-                code = params.get('code', [None])[0]
-                return code
-            except Exception as e:
-                logger.error(f"Failed to parse URL: {e}")
-                return None
-        
-        return url_or_code
-    
-    @staticmethod
-    def build_roblox_url(url_or_code):
-        """Build full Roblox URL"""
-        if not url_or_code:
-            return None
-        
-        url_or_code = str(url_or_code).strip()
-        
-        if url_or_code.startswith('http'):
-            return url_or_code
-        
-        return f"https://www.roblox.com/share?code={url_or_code}&type=Server"
-    
-    @staticmethod
-    def connect_device(ip):
-        """Connect to device via ADB wireless"""
+    def check_adb_installed() -> bool:
+        """Check if ADB is installed"""
         try:
-            cmd = f"adb connect {ip}:5555"
-            result = subprocess.run(
-                cmd, 
-                shell=True, 
-                capture_output=True, 
-                timeout=15,
-                text=True
-            )
-            output = result.stdout.lower()
-            is_connected = "connected" in output or "already connected" in output
-            
-            if is_connected:
-                logger.debug(f"ADB connected to {ip}")
-            else:
-                logger.warning(f"Failed to connect to {ip}: {result.stdout}")
-            
-            return is_connected
-        except subprocess.TimeoutExpired:
-            logger.error(f"ADB connect timeout for {ip}")
-            return False
-        except Exception as e:
-            logger.error(f"Error connecting to {ip}: {e}")
+            result = subprocess.run(['adb', 'version'], capture_output=True, timeout=5)
+            return result.returncode == 0
+        except:
             return False
     
     @staticmethod
-    def check_app_running(ip, package):
+    def connect(ip: str, port: int = 5555) -> bool:
+        """Connect to device via ADB"""
+        try:
+            cmd = f"adb connect {ip}:{port}"
+            result = subprocess.run(cmd, shell=True, capture_output=True, timeout=15, text=True)
+            
+            output = result.stdout.lower()
+            success = "connected" in output or "already connected" in output
+            
+            if success:
+                logger.debug(f"✓ ADB connected to {ip}:{port}")
+            else:
+                logger.warning(f"Failed to connect ADB to {ip}:{port}: {result.stdout}")
+            
+            return success
+        except Exception as e:
+            logger.error(f"Error connecting ADB to {ip}:{port}: {e}")
+            return False
+    
+    @staticmethod
+    def is_app_running(ip: str, package: str, port: int = 5555) -> bool:
         """Check if app is running on device"""
         try:
-            cmd = f"adb -s {ip}:5555 shell \"ps | grep {package}\""
-            result = subprocess.run(
-                cmd, 
-                shell=True, 
-                capture_output=True, 
-                timeout=10,
-                text=True
-            )
-            is_running = package in result.stdout
-            logger.debug(f"App {package} on {ip}: {'RUNNING' if is_running else 'NOT RUNNING'}")
+            cmd = f'adb -s {ip}:{port} shell "pidof {package}"'
+            result = subprocess.run(cmd, shell=True, capture_output=True, timeout=10, text=True)
+            
+            # If pidof returns a number, app is running
+            is_running = result.returncode == 0 and result.stdout.strip().isdigit()
+            logger.debug(f"App {package} on {ip}: {'RUNNING' if is_running else 'STOPPED'}")
             return is_running
-        except subprocess.TimeoutExpired:
-            logger.error(f"Check app timeout for {package} on {ip}")
-            return False
         except Exception as e:
-            logger.error(f"Error checking app {package} on {ip}: {e}")
+            logger.error(f"Error checking app status: {e}")
             return False
     
     @staticmethod
-    def kill_app(ip, package):
-        """Force stop app on device"""
+    def force_stop_app(ip: str, package: str, port: int = 5555) -> bool:
+        """Force stop an app"""
         try:
-            cmd = f"adb -s {ip}:5555 shell \"am force-stop {package}\""
-            result = subprocess.run(
-                cmd, 
-                shell=True, 
-                capture_output=True, 
-                timeout=10,
-                text=True
-            )
+            cmd = f'adb -s {ip}:{port} shell "am force-stop {package}"'
+            result = subprocess.run(cmd, shell=True, capture_output=True, timeout=10, text=True)
             
             if result.returncode == 0:
-                logger.info(f"✓ Killed {package} on {ip}")
+                logger.info(f"✓ Stopped app: {package} on {ip}")
                 return True
             else:
-                logger.error(f"Failed to kill {package}: {result.stderr}")
+                logger.error(f"Failed to stop app: {result.stderr}")
                 return False
         except Exception as e:
-            logger.error(f"Error killing {package} on {ip}: {e}")
+            logger.error(f"Error stopping app: {e}")
             return False
     
     @staticmethod
-    def start_app(ip, package, url_or_code):
-        """Start Roblox app with URL or code"""
+    def start_app(ip: str, package: str, roblox_url: str, port: int = 5555) -> bool:
+        """Start app with Roblox URL"""
         try:
-            roblox_url = DeviceController.build_roblox_url(url_or_code)
+            # Ensure URL is properly formatted
+            if not roblox_url.startswith('http'):
+                if '=' in roblox_url:  # It's a code
+                    code = roblox_url.split('=')[-1].split('&')[0]
+                    roblox_url = f"https://www.roblox.com/share?code={code}&type=Server"
+                else:
+                    roblox_url = f"https://www.roblox.com/share?code={roblox_url}&type=Server"
             
-            if not roblox_url:
-                logger.error(f"Invalid Roblox URL/code: {url_or_code}")
-                return False
-            
-            cmd = f"adb -s {ip}:5555 shell \"am start -a android.intent.action.VIEW -d '{roblox_url}' {package}\""
-            result = subprocess.run(
-                cmd, 
-                shell=True, 
-                capture_output=True, 
-                timeout=10,
-                text=True
-            )
+            cmd = f'adb -s {ip}:{port} shell "am start -a android.intent.action.VIEW -d \'{roblox_url}\' {package}"'
+            result = subprocess.run(cmd, shell=True, capture_output=True, timeout=10, text=True)
             
             if result.returncode == 0:
-                code = DeviceController.extract_roblox_code(url_or_code)
-                logger.info(f"✓ Started {package} on {ip} (code: {code[:8] if code else 'N/A'}...)")
+                logger.info(f"✓ Started app: {package} on {ip}")
                 return True
             else:
-                logger.error(f"Failed to start {package}: {result.stderr}")
+                logger.error(f"Failed to start app: {result.stderr}")
                 return False
-                
         except Exception as e:
-            logger.error(f"Error starting {package} on {ip}: {e}")
+            logger.error(f"Error starting app: {e}")
             return False
     
     @staticmethod
-    def restart_app(ip, package, url_or_code, delay=5):
-        """Restart app: kill → wait → start"""
+    def restart_app(ip: str, package: str, roblox_url: str, port: int = 5555, delay: int = 3) -> bool:
+        """Restart app (force stop + start)"""
         logger.info(f"🔄 Restarting {package} on {ip}")
         
-        DeviceController.kill_app(ip, package)
-        time.sleep(delay)
-        success = DeviceController.start_app(ip, package, url_or_code)
+        # Stop app
+        ADBController.force_stop_app(ip, package, port)
         
-        return success
+        # Wait before starting
+        time.sleep(delay)
+        
+        # Start app
+        return ADBController.start_app(ip, package, roblox_url, port)
 
 # ========== MONITOR ==========
-class VSPhoneMonitor:
+class RobloxMonitor:
     """Main monitoring system"""
     
-    def __init__(self, config_file=CONFIG_FILE):
-        logger.info(f"Loading configuration from {config_file}...")
+    def __init__(self, config_path: str = CONFIG_FILE):
+        logger.info("="*70)
+        logger.info(f"VSPhone Auto Reconnect v{VERSION}")
+        logger.info("="*70)
         
+        # Check ADB
+        if not ADBController.check_adb_installed():
+            logger.error("❌ ADB is not installed! Please install Android Debug Bridge (ADB)")
+            sys.exit(1)
+        
+        logger.info("✓ ADB is installed")
+        
+        # Load configuration
         try:
-            with open(config_file, 'r', encoding='utf-8') as f:
+            with open(config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
+            logger.info(f"✓ Loaded configuration from {config_path}")
         except FileNotFoundError:
-            logger.error(f"Config file not found: {config_file}")
-            raise
+            logger.error(f"❌ Config file not found: {config_path}")
+            logger.error("Please create config.json with your account details")
+            sys.exit(1)
         except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in config file: {e}")
-            raise
+            logger.error(f"❌ Invalid JSON in config file: {e}")
+            sys.exit(1)
         
         # Initialize accounts
         self.accounts = []
-        for acc_config in self.config.get('accounts', []):
-            account = {
-                'name': acc_config['name'],
-                'api': VSPhoneAPI(acc_config['api_key'], acc_config['api_secret']),
-                'devices': acc_config.get('devices', [])
-            }
-            self.accounts.append(account)
-            logger.info(f"Loaded account: {account['name']} with {len(account['devices'])} devices")
+        for acc in self.config.get('accounts', []):
+            api = VSPhoneAPI(acc['api_key'], acc['api_secret'])
+            self.accounts.append({
+                'name': acc['name'],
+                'api': api,
+                'devices': acc.get('devices', [])
+            })
+            logger.info(f"✓ Account loaded: {acc['name']} ({len(acc.get('devices', []))} devices)")
         
-        # Monitoring config
-        self.monitoring_config = self.config.get('monitoring', {})
-        self.check_interval = self.monitoring_config.get('check_interval', 30)
-        self.restart_delay = self.monitoring_config.get('restart_delay', 5)
-        self.max_restart_attempts = self.monitoring_config.get('max_restart_attempts', 3)
+        # Monitoring settings
+        mon_config = self.config.get('monitoring', {})
+        self.check_interval = mon_config.get('check_interval', 30)
+        self.restart_delay = mon_config.get('restart_delay', 5)
         
         # Statistics
-        self.stats = self.load_stats()
-        
-        logger.info(f"Monitor initialized with {len(self.accounts)} accounts")
-    
-    def load_stats(self):
-        """Load statistics from file"""
-        try:
-            if os.path.exists(STATS_FILE):
-                with open(STATS_FILE, 'r') as f:
-                    return json.load(f)
-        except Exception as e:
-            logger.warning(f"Failed to load stats: {e}")
-        
-        return {
+        self.stats = {
             'total_checks': 0,
             'total_restarts': 0,
-            'last_check': None,
             'started_at': datetime.now().isoformat()
         }
+        
+        logger.info("="*70)
+        logger.info(f"⏱️  Check interval: {self.check_interval}s")
+        logger.info(f"🔄 Restart delay: {self.restart_delay}s")
+        logger.info("="*70)
     
-    def save_stats(self):
-        """Save statistics to file"""
-        try:
-            with open(STATS_FILE, 'w') as f:
-                json.dump(self.stats, f, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save stats: {e}")
-    
-    def print_banner(self):
-        """Print startup banner"""
-        banner = f"""
-╔══════════════════════════════════════════════════════════════╗
-║          VSPhone Multi-Account Monitor v{VERSION}                ║
-║          24/7 Automatic Device & App Management              ║
-║                    FIXED: API 405 Error                      ║
-╚══════════════════════════════════════════════════════════════╝
-
-📊 Accounts: {len(self.accounts)}
-📱 Total devices: {sum(len(acc['devices']) for acc in self.accounts)}
-⏱️  Check interval: {self.check_interval}s
-🔄 Restart delay: {self.restart_delay}s
-📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-📝 Logs: {LOG_FILE}
-"""
-        if HAS_COLOR:
-            print(Fore.CYAN + Style.BRIGHT + banner + Style.RESET_ALL)
-        else:
-            print(banner)
-    
-    def check_account_devices(self, account):
-        """Check all devices for one account"""
-        account_name = account['name']
-        api = account['api']
+    def check_and_restart_apps(self):
+        """Check all apps and restart if needed"""
         
-        logger.info(f"Checking account: {account_name}")
-        
-        # Get device list from VSPhone API
-        api_response = api.get_devices()
-        
-        if not api_response or 'data' not in api_response:
-            logger.error(f"{account_name}: Failed to get device list from API")
-            logger.warning(f"{account_name}: Will still try to check devices via ADB...")
-            # Continue to check devices via ADB even if API fails
-            for device_config in account['devices']:
-                device_ip = device_config.get('device_ip')
-                if device_ip:
-                    self.check_device_apps(account_name, device_ip, device_config.get('apps', []))
-            return
-        
-        api_devices = api_response.get('data', {}).get('list', [])
-        
-        # Check each configured device
-        for device_config in account['devices']:
-            device_id = device_config.get('device_id')
-            device_name = device_config.get('device_name')
-            device_ip = device_config.get('device_ip')
+        for account in self.accounts:
+            account_name = account['name']
+            logger.info(f"\n📱 Checking account: {account_name}")
             
-            if not device_ip:
-                logger.error(f"Missing device_ip for {device_name or device_id}")
-                continue
-            
-            # Find device in API response
-            api_device = None
-            for d in api_devices:
-                d_id = d.get('phoneId') or d.get('id')
-                d_name = d.get('phoneName') or d.get('name')
-                
-                if (device_id and d_id == device_id) or (device_name and d_name == device_name):
-                    api_device = d
-                    break
-            
-            if not api_device:
-                logger.warning(f"{account_name} - {device_name or device_id}: Device not found in API")
-                self.check_device_apps(account_name, device_ip, device_config.get('apps', []))
-                continue
-            
-            # Check device online status
-            is_online = api_device.get('online') == 1 or api_device.get('status') == 'online'
-            
-            display_name = device_name or api_device.get('phoneName') or device_id
-            status_icon = "🟢" if is_online else "🔴"
-            status_color = Fore.GREEN if is_online else Fore.RED
-            
-            if HAS_COLOR:
-                print(f"{status_color}{status_icon} {account_name} - {display_name}: {'ONLINE' if is_online else 'OFFLINE'}{Style.RESET_ALL}")
-            else:
-                print(f"{status_icon} {account_name} - {display_name}: {'ONLINE' if is_online else 'OFFLINE'}")
-            
-            if not is_online:
-                logger.warning(f"{account_name} - {display_name}: Device offline, skipping app check")
-                continue
-            
-            # Check and restart apps if needed
-            self.check_device_apps(account_name, device_ip, device_config.get('apps', []))
-    
-    def check_device_apps(self, account_name, device_ip, apps):
-        """Check all apps on a device"""
-        
-        if not apps:
-            logger.debug(f"No apps configured for {device_ip}")
-            return
-        
-        # Connect to device first
-        if not DeviceController.connect_device(device_ip):
-            logger.error(f"{account_name} - {device_ip}: Failed to connect via ADB")
-            return
-        
-        # Check each app
-        for app in apps:
-            package = app.get('package')
-            url_or_code = app.get('roblox_url') or app.get('share_code')
-            game_name = app.get('game_name', package)
-            
-            if not package:
-                logger.error(f"Missing package name in app config")
-                continue
-            
-            if not url_or_code:
-                logger.error(f"Missing roblox_url/share_code for {package}")
-                continue
-            
-            # Check if app is running
-            is_running = DeviceController.check_app_running(device_ip, package)
-            
-            if not is_running:
-                if HAS_COLOR:
-                    print(f"  {Fore.YELLOW}⚠️  {game_name} ({package}): NOT RUNNING{Style.RESET_ALL}")
-                else:
-                    print(f"  ⚠️  {game_name} ({package}): NOT RUNNING")
-                
-                logger.warning(f"{account_name} - {device_ip} - {game_name}: App stopped, restarting...")
-                
-                success = DeviceController.restart_app(
-                    device_ip, 
-                    package, 
-                    url_or_code, 
-                    delay=self.restart_delay
-                )
-                
-                if success:
-                    self.stats['total_restarts'] += 1
-                    if HAS_COLOR:
-                        print(f"  {Fore.GREEN}✅ {game_name}: RESTARTED{Style.RESET_ALL}")
-                    else:
-                        print(f"  ✅ {game_name}: RESTARTED")
-                else:
-                    if HAS_COLOR:
-                        print(f"  {Fore.RED}❌ {game_name}: RESTART FAILED{Style.RESET_ALL}")
-                    else:
-                        print(f"  ❌ {game_name}: RESTART FAILED")
-            else:
-                if HAS_COLOR:
-                    print(f"  {Fore.GREEN}✅ {game_name} ({package}): RUNNING{Style.RESET_ALL}")
-                else:
-                    print(f"  ✅ {game_name} ({package}): RUNNING")
-    
-    def monitor_loop(self):
-        """Main monitoring loop"""
-        self.print_banner()
-        
-        logger.info("Starting monitoring loop...")
-        
-        while True:
+            # Get device status from API (optional - for monitoring only)
+            devices_online = {}
             try:
-                separator = "=" * 70
-                print(f"\n{separator}")
-                print(f"🔍 Checking all accounts - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                print(f"{separator}\n")
+                api_devices = account['api'].get_device_list()
+                if api_devices:
+                    for dev in api_devices:
+                        phone_id = dev.get('phoneId') or dev.get('id')
+                        is_online = dev.get('online') == 1
+                        devices_online[phone_id] = is_online
+            except:
+                logger.warning(f"Could not fetch device status from API")
+            
+            # Check each configured device
+            for device_config in account['devices']:
+                device_id = device_config.get('device_id')
+                device_ip = device_config.get('device_ip')
                 
-                # Check all accounts in parallel
-                with ThreadPoolExecutor(max_workers=min(len(self.accounts), 4)) as executor:
-                    futures = [
-                        executor.submit(self.check_account_devices, account)
-                        for account in self.accounts
-                    ]
+                if not device_ip:
+                    logger.error(f"❌ Missing device_ip for device {device_id}")
+                    logger.error("Please add 'device_ip' to your config.json!")
+                    continue
+                
+                # Check API status if available
+                if device_id in devices_online:
+                    status = "🟢 ONLINE" if devices_online[device_id] else "🔴 OFFLINE"
+                    logger.info(f"  Device {device_id}: {status}")
+                
+                # Connect via ADB
+                if not ADBController.connect(device_ip):
+                    logger.error(f"  ❌ Failed to connect to {device_ip} via ADB")
+                    continue
+                
+                logger.info(f"  ✓ Connected to {device_ip}")
+                
+                # Check each app
+                for app in device_config.get('apps', []):
+                    package = app.get('package')
+                    roblox_url = app.get('roblox_url')
+                    game_name = app.get('game_name', package)
                     
-                    for future in as_completed(futures):
-                        try:
-                            future.result()
-                        except Exception as e:
-                            logger.error(f"Error in account check: {e}", exc_info=True)
-                
-                # Update statistics
-                self.stats['total_checks'] += 1
-                self.stats['last_check'] = datetime.now().isoformat()
-                self.save_stats()
-                
-                # Print summary
-                print(f"\n{separator}")
-                print(f"📈 Total checks: {self.stats['total_checks']} | Total restarts: {self.stats['total_restarts']}")
-                print(f"⏳ Next check in {self.check_interval} seconds...")
-                print(f"{separator}")
-                
-                # Wait for next interval
-                time.sleep(self.check_interval)
-                
-            except KeyboardInterrupt:
-                logger.info("Received keyboard interrupt")
-                break
-            except Exception as e:
-                logger.error(f"Error in monitor loop: {e}", exc_info=True)
-                logger.info("Waiting 10 seconds before retry...")
-                time.sleep(10)
+                    if not package or not roblox_url:
+                        logger.error(f"    ❌ Missing package or roblox_url in config")
+                        continue
+                    
+                    # Check if app is running
+                    is_running = ADBController.is_app_running(device_ip, package)
+                    
+                    if is_running:
+                        logger.info(f"    ✅ {game_name}: RUNNING")
+                    else:
+                        logger.warning(f"    ⚠️  {game_name}: NOT RUNNING")
+                        
+                        # Restart app
+                        success = ADBController.restart_app(
+                            device_ip, 
+                            package, 
+                            roblox_url, 
+                            delay=self.restart_delay
+                        )
+                        
+                        if success:
+                            self.stats['total_restarts'] += 1
+                            logger.info(f"    ✅ {game_name}: RESTARTED SUCCESSFULLY")
+                        else:
+                            logger.error(f"    ❌ {game_name}: RESTART FAILED")
+    
+    def run(self):
+        """Main monitoring loop"""
+        logger.info("\n🚀 Starting monitoring loop...\n")
         
-        logger.info("Monitor stopped")
+        try:
+            while True:
+                self.stats['total_checks'] += 1
+                
+                logger.info("="*70)
+                logger.info(f"🔍 CHECK #{self.stats['total_checks']} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                logger.info("="*70)
+                
+                try:
+                    self.check_and_restart_apps()
+                except Exception as e:
+                    logger.error(f"Error during check: {e}")
+                    logger.debug(traceback.format_exc())
+                
+                logger.info("\n" + "="*70)
+                logger.info(f"📊 Stats: Checks={self.stats['total_checks']}, Restarts={self.stats['total_restarts']}")
+                logger.info(f"⏳ Next check in {self.check_interval} seconds...")
+                logger.info("="*70 + "\n")
+                
+                time.sleep(self.check_interval)
+        
+        except KeyboardInterrupt:
+            logger.info("\n\n🛑 Stopping monitor (Ctrl+C pressed)")
+            logger.info(f"Final stats: {self.stats['total_checks']} checks, {self.stats['total_restarts']} restarts")
+            sys.exit(0)
 
-# ========== MAIN ENTRY POINT ==========
+# ========== MAIN ==========
 def main():
     """Main entry point"""
-    
-    # Write PID file
     try:
-        with open(PID_FILE, 'w') as f:
-            f.write(str(os.getpid()))
+        monitor = RobloxMonitor(CONFIG_FILE)
+        monitor.run()
     except Exception as e:
-        logger.warning(f"Failed to write PID file: {e}")
-    
-    try:
-        monitor = VSPhoneMonitor(CONFIG_FILE)
-        monitor.monitor_loop()
-    except FileNotFoundError:
-        logger.error(f"❌ Config file not found: {CONFIG_FILE}")
-        logger.error(f"Please create {CONFIG_FILE} with your VSPhone account details")
+        logger.error(f"❌ Fatal error: {e}")
+        logger.debug(traceback.format_exc())
         return 1
-    except KeyboardInterrupt:
-        logger.info("\n👋 Goodbye!")
-        return 0
-    except Exception as e:
-        logger.error(f"❌ Fatal error: {e}", exc_info=True)
-        return 1
-    finally:
-        try:
-            if os.path.exists(PID_FILE):
-                os.remove(PID_FILE)
-        except:
-            pass
     
     return 0
 

@@ -1,0 +1,155 @@
+2025-11-13 19:51:02 [INFO] Loading configuration from account.json...
+2025-11-13 19:51:02 [ERROR] Config file not found: account.json
+2025-11-13 19:51:02 [ERROR] ❌ Config file not found: account.json
+2025-11-13 19:51:02 [ERROR] Please create account.json with your VSPhone account details
+2025-11-13 19:52:11 [INFO] Loading configuration from accounts.json...
+2025-11-13 19:52:11 [INFO] Loaded account: Account_1 with 2 devices
+2025-11-13 19:52:11 [INFO] Monitor initialized with 1 accounts
+2025-11-13 19:52:11 [INFO] Starting monitoring loop...
+2025-11-13 19:52:11 [INFO] Checking account: Account_1
+2025-11-13 19:52:12 [WARNING] POST returned 405, trying alternative methods...
+2025-11-13 19:52:12 [ERROR] GET request error: Expecting value: line 1 column 1 (char 0)
+2025-11-13 19:52:13 [ERROR] POST (empty string) failed with status 405: <html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+
+2025-11-13 19:52:13 [ERROR] ❌ All API request methods failed!
+2025-11-13 19:52:13 [ERROR] Please check:
+2025-11-13 19:52:13 [ERROR] 1. API Key and Secret are correct
+2025-11-13 19:52:13 [ERROR] 2. Account has active subscription
+2025-11-13 19:52:13 [ERROR] 3. Network connection is working
+2025-11-13 19:52:13 [ERROR] 4. VSPhone API is not down
+2025-11-13 19:52:13 [ERROR] Account_1: Failed to get device list from API
+2025-11-13 19:52:13 [WARNING] Account_1: Will still try to check devices via ADB...
+2025-11-13 19:52:13 [WARNING] Failed to connect to 162.128.158.208: 
+2025-11-13 19:52:13 [ERROR] Account_1 - 162.128.158.208: Failed to connect via ADB
+2025-11-13 19:52:13 [WARNING] Failed to connect to 162.128.224.135: 
+2025-11-13 19:52:13 [ERROR] Account_1 - 162.128.224.135: Failed to connect via ADB
+2025-11-13 19:52:24 [INFO] 
+🛑 Received stop signal, shutting down gracefully...
+2025-11-13 19:54:30 [INFO] Loading configuration from account.json...
+2025-11-13 19:54:30 [INFO] Loaded account: Account_1 with 2 devices
+2025-11-13 19:54:30 [INFO] Monitor initialized with 1 accounts
+2025-11-13 19:54:30 [INFO] Starting monitoring loop...
+2025-11-13 19:54:30 [INFO] Checking account: Account_1
+2025-11-13 19:54:30 [WARNING] POST returned 405, trying alternative methods...
+2025-11-13 19:54:30 [ERROR] GET request error: Expecting value: line 1 column 1 (char 0)
+2025-11-13 19:54:31 [ERROR] POST (empty string) failed with status 405: <html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+
+2025-11-13 19:54:31 [ERROR] ❌ All API request methods failed!
+2025-11-13 19:54:31 [ERROR] Please check:
+2025-11-13 19:54:31 [ERROR] 1. API Key and Secret are correct
+2025-11-13 19:54:31 [ERROR] 2. Account has active subscription
+2025-11-13 19:54:31 [ERROR] 3. Network connection is working
+2025-11-13 19:54:31 [ERROR] 4. VSPhone API is not down
+2025-11-13 19:54:31 [ERROR] Account_1: Failed to get device list from API
+2025-11-13 19:54:31 [WARNING] Account_1: Will still try to check devices via ADB...
+2025-11-13 19:54:31 [WARNING] Failed to connect to 162.128.158.208: 
+2025-11-13 19:54:31 [ERROR] Account_1 - 162.128.158.208: Failed to connect via ADB
+2025-11-13 19:54:31 [WARNING] Failed to connect to 162.128.224.135: 
+2025-11-13 19:54:31 [ERROR] Account_1 - 162.128.224.135: Failed to connect via ADB
+2025-11-13 19:54:35 [INFO] 
+🛑 Received stop signal, shutting down gracefully...
+2025-11-13 22:11:25 [INFO] Loading configuration from account.json...
+2025-11-13 22:11:25 [INFO] Loaded account: Account_1 with 2 devices
+2025-11-13 22:11:25 [INFO] Monitor initialized with 1 accounts
+2025-11-13 22:11:25 [INFO] Starting monitoring loop...
+2025-11-13 22:11:25 [INFO] Checking account: Account_1
+2025-11-13 22:11:26 [WARNING] POST returned 405, trying alternative methods...
+2025-11-13 22:11:26 [ERROR] GET request error: Expecting value: line 1 column 1 (char 0)
+2025-11-13 22:11:27 [ERROR] POST (empty string) failed with status 405: <html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+
+2025-11-13 22:11:27 [ERROR] ❌ All API request methods failed!
+2025-11-13 22:11:27 [ERROR] Please check:
+2025-11-13 22:11:27 [ERROR] 1. API Key and Secret are correct
+2025-11-13 22:11:27 [ERROR] 2. Account has active subscription
+2025-11-13 22:11:27 [ERROR] 3. Network connection is working
+2025-11-13 22:11:27 [ERROR] 4. VSPhone API is not down
+2025-11-13 22:11:27 [ERROR] Account_1: Failed to get device list from API
+2025-11-13 22:11:27 [WARNING] Account_1: Will still try to check devices via ADB...
+2025-11-13 22:11:27 [WARNING] Failed to connect to 162.128.224.135: 
+2025-11-13 22:11:27 [ERROR] Account_1 - 162.128.224.135: Failed to connect via ADB
+2025-11-13 22:11:28 [INFO] 
+🛑 Received stop signal, shutting down gracefully...
+2025-11-13 22:13:33 [INFO] Loading configuration from account.json...
+2025-11-13 22:13:33 [INFO] Loaded account: Account_1 with 1 devices
+2025-11-13 22:13:33 [INFO] Monitor initialized with 1 accounts
+2025-11-13 22:13:33 [INFO] Starting monitoring loop...
+2025-11-13 22:13:33 [INFO] Checking account: Account_1
+2025-11-13 22:13:33 [WARNING] POST returned 405, trying alternative methods...
+2025-11-13 22:13:34 [ERROR] GET request error: Expecting value: line 1 column 1 (char 0)
+2025-11-13 22:13:34 [ERROR] POST (empty string) failed with status 405: <html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+
+2025-11-13 22:13:34 [ERROR] ❌ All API request methods failed!
+2025-11-13 22:13:34 [ERROR] Please check:
+2025-11-13 22:13:34 [ERROR] 1. API Key and Secret are correct
+2025-11-13 22:13:34 [ERROR] 2. Account has active subscription
+2025-11-13 22:13:34 [ERROR] 3. Network connection is working
+2025-11-13 22:13:34 [ERROR] 4. VSPhone API is not down
+2025-11-13 22:13:34 [ERROR] Account_1: Failed to get device list from API
+2025-11-13 22:13:34 [WARNING] Account_1: Will still try to check devices via ADB...
+2025-11-13 22:13:37 [INFO] 
+🛑 Received stop signal, shutting down gracefully...
+2025-11-13 22:17:23 [WARNING] POST returned 405, trying alternative methods...
+2025-11-13 22:17:23 [ERROR] GET request error: Expecting value: line 1 column 1 (char 0)
+2025-11-13 22:17:24 [ERROR] POST (empty string) failed with status 405: <html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+
+2025-11-13 22:17:24 [ERROR] ❌ All API request methods failed!
+2025-11-13 22:17:24 [ERROR] Please check:
+2025-11-13 22:17:24 [ERROR] 1. API Key and Secret are correct
+2025-11-13 22:17:24 [ERROR] 2. Account has active subscription
+2025-11-13 22:17:24 [ERROR] 3. Network connection is working
+2025-11-13 22:17:24 [ERROR] 4. VSPhone API is not down
+2025-11-13 22:43:54 [ERROR] Failed with status 404: {"timestamp":"2025-11-13T23:43:55.051+0800","status":404,"error":"Not Found","path":"/vsphone/api/padApi/list"}
+2025-11-13 22:43:54 [ERROR] ❌ API request failed!
+2025-11-13 22:43:54 [ERROR] Please check:
+2025-11-13 22:43:54 [ERROR] 1. API Key and Secret are correct
+2025-11-13 22:43:54 [ERROR] 2. Endpoint is correct (check docs: https://cloud.vsphone.com/vsphone/doc/en/server/OpenAPI.html)
+2025-11-13 22:43:54 [ERROR] 3. Account has active subscription
+2025-11-13 22:43:54 [ERROR] 4. Network connection is working
+2025-11-13 22:43:54 [ERROR] 5. VSPhone API is not down
+2025-11-13 22:47:22 [INFO] Loading configuration from account.json...
+2025-11-13 22:47:22 [INFO] Loaded account: Account_1 with 1 devices
+2025-11-13 22:47:22 [INFO] Monitor initialized with 1 accounts
+2025-11-13 22:47:22 [INFO] Starting monitoring loop...
+2025-11-13 22:47:22 [INFO] Checking account: Account_1
+2025-11-13 22:47:23 [ERROR] Failed with status 404: {"timestamp":"2025-11-13T23:47:23.738+0800","status":404,"error":"Not Found","path":"/vsphone/api/padApi/list"}
+2025-11-13 22:47:23 [ERROR] ❌ API request failed!
+2025-11-13 22:47:23 [ERROR] Please check:
+2025-11-13 22:47:23 [ERROR] 1. API Key and Secret are correct
+2025-11-13 22:47:23 [ERROR] 2. Endpoint is correct (check docs: https://cloud.vsphone.com/vsphone/doc/en/server/OpenAPI.html)
+2025-11-13 22:47:23 [ERROR] 3. Account has active subscription
+2025-11-13 22:47:23 [ERROR] 4. Network connection is working
+2025-11-13 22:47:23 [ERROR] 5. VSPhone API is not down
+2025-11-13 22:47:23 [ERROR] Account_1: Failed to get device list from API
+2025-11-13 22:47:23 [WARNING] Account_1: Will still try to check devices via ADB...
+2025-11-13 22:47:25 [INFO] 
+🛑 Received stop signal, shutting down gracefully...

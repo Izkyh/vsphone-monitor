@@ -1,0 +1,17 @@
+2025-11-14 13:56:34 [INFO] ======================================================================
+2025-11-14 13:56:34 [INFO] VSPhone Auto Reconnect v2.0.0
+2025-11-14 13:56:34 [INFO] ======================================================================
+2025-11-14 13:56:34 [ERROR] ❌ ADB is not installed! Please install Android Debug Bridge (ADB)
+2025-11-14 18:20:13 [INFO] ✓ API Client initialized for key: BGtN6bmiB3...
+2025-11-14 18:20:13 [ERROR] API request failed: 405 - <html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+
+2025-11-16 10:59:20 [INFO] ======================================================================
+2025-11-16 10:59:20 [INFO] VSPhone Auto Reconnect v2.0.0
+2025-11-16 10:59:20 [INFO] ======================================================================
+2025-11-16 10:59:20 [ERROR] ❌ ADB is not installed! Please install Android Debug Bridge (ADB)
